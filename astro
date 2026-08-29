@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jyotisha — Vedic Birth Chart &amp; Dasha Calculator</title>
+<style>
+  :root{
+    --ink:#141126;
+    --sky-1:#181433;
+    --sky-2:#0f0c22;
+    --gold:#c9a463;
+    --gold-bright:#e4c584;
+    --sindoor:#a8453f;
+    --parchment:#efe7d6;
+    --parchment-dim:#d9cfb6;
+    --lavender:#b3aad0;
+    --line: rgba(201,164,99,0.28);
+    --good:#7fa876;
+    --bad:#b56a5a;
+    --neutral:#b3aad0;
+    --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --font-body: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-data: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(201,164,99,0.10), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(168,69,63,0.10), transparent 40%),
+      linear-gradient(180deg, var(--sky-1), var(--sky-2) 60%);
+    color: var(--parchment);
+    font-family: var(--font-body);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* ---------- Header / signature ---------- */
+  header.hero{
+    position:relative;
+    text-align:center;
+    padding:36px 10px 26px;
+    overflow:hidden;
+  }
+  .wheel{
+    position:absolute; top:-90px; left:50%; transform:translateX(-50%);
+    width:420px; height:420px;
+    border-radius:50%;
+    border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center;
+    animation: spin 180s linear infinite;
+    pointer-events:none;
+  }
+  .wheel .glyphs{position:relative; width:100%; height:100%;}
+  .wheel .glyphs span{
+    position:absolute; top:50%; left:50%;
+    width:26px; height:26px; margin:-13px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; color:var(--gold); opacity:0.55;
+    transform-origin:center;
+  }
+  @keyframes spin{ to{ transform:translateX(-50%) rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .wheel{ animation:none; } }
+
+  header.hero .eyebrow{
+    letter-spacing:0.22em; text-transform:uppercase; font-size:11px;
+    color:var(--gold); margin-bottom:10px; position:relative;
+  }
+  header.hero h1{
+    font-family:var(--font-display); font-weight:600; font-size:clamp(30px,5vw,44px);
+    margin:0; color:var(--parchment); position:relative; letter-spacing:0.01em;
+  }
+  header.hero h1 em{ color:var(--gold-bright); font-style:normal; }
+  header.hero p.sub{
+    max-width:520px; margin:12px auto 0; color:var(--lavender); font-size:14.5px; position:relative;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 22px 24px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-family:var(--font-display); font-size:20px; margin:0 0 4px; color:var(--gold-bright); font-weight:600;
+  }
+  .card .hint{ color:var(--lavender); font-size:13px; margin:0 0 18px; }
+
+  /* ---------- Form ---------- */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .field label{ font-size:12.5px; color:var(--lavender); letter-spacing:0.03em; }
+  input, select{
+    background: rgba(0,0,0,0.25);
+    border:1px solid var(--line);
+    color:var(--parchment);
+    border-radius:6px;
+    padding:10px 11px;
+    font-size:14.5px;
+    font-family:var(--font-body);
+    outline:none;
+  }
+  input::placeholder{ color:#6f6a8c; }
+  input:focus, select:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,164,99,0.18); }
+  select option{ background:#1b1738; color:var(--parchment); }
+  .city-results{
+    position:relative;
+  }
+  .city-dropdown{
+    position:absolute; z-index:5; top:calc(100% + 4px); left:0; right:0;
+    background:#1c1839; border:1px solid var(--line); border-radius:8px;
+    max-height:220px; overflow-y:auto; display:none;
+  }
+  .city-dropdown.open{ display:block; }
+  .city-dropdown div{ padding:8px 12px; font-size:13.5px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .city-dropdown div:hover{ background:rgba(201,164,99,0.15); }
+  details.advanced{ margin-top:4px; }
+  details.advanced summary{
+    cursor:pointer; color:var(--gold); font-size:13px; letter-spacing:0.02em; margin-bottom:10px;
+  }
+  .btn{
+    display:inline-block; border:none; cursor:pointer;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#231a0a; font-weight:700; letter-spacing:0.02em;
+    padding:12px 26px; border-radius:7px; font-size:14.5px; font-family:var(--font-body);
+    margin-top:6px;
+  }
+  .btn:hover{ filter:brightness(1.06); }
+  .btn.secondary{ background:transparent; border:1px solid var(--gold); color:var(--gold); font-weight:600; padding:8px 16px; }
+  .error{ color:var(--bad); font-size:13px; margin-top:8px; display:none; }
+
+  /* ---------- Results ---------- */
+  #results{ display:none; }
+  .summary-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:6px; }
+  .summary-item{
+    border:1px solid var(--line); border-radius:8px; padding:14px 14px 12px; background:rgba(0,0,0,0.18);
+  }
+  .summary-item .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.09em; color:var(--gold); margin-bottom:6px; }
+  .summary-item .v{ font-family:var(--font-display); font-size:19px; color:var(--parchment); }
+  .summary-item .v2{ font-size:12.5px; color:var(--lavender); margin-top:2px; }
+
+  /* Chart */
+  .chart-wrap{ display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; }
+  .rasi-chart{
+    display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr);
+    width:320px; height:320px; border:1px solid var(--gold); border-radius:4px; overflow:hidden; flex:none;
+  }
+  .rasi-cell{
+    border:1px solid var(--line); padding:5px 6px; font-size:11px; position:relative; display:flex; flex-direction:column;
+  }
+  .rasi-cell .sign{ color:var(--gold); font-size:11.5px; margin-bottom:3px; }
+  .rasi-cell .planets{ color:var(--parchment); font-family:var(--font-data); font-size:11.5px; line-height:1.5; flex:1; }
+  .rasi-cell.asc{ background:rgba(201,164,99,0.10); }
+  .rasi-cell .asc-tag{ position:absolute; bottom:4px; right:6px; color:var(--sindoor); font-size:10px; font-weight:700; }
+  .rasi-center{ grid-column:2 / span 2; grid-row:2 / span 2; display:flex; align-items:center; justify-content:center; flex-direction:column; border:1px solid var(--line); }
+  .rasi-center .om{ font-size:30px; color:var(--gold); opacity:0.6; }
+  .rasi-center .cap{ font-family:var(--font-display); font-size:12px; color:var(--lavender); margin-top:4px; text-align:center; padding:0 8px;}
+
+  .legend{ font-size:12px; color:var(--lavender); flex:1; min-width:220px; }
+  .legend table{ border-collapse:collapse; width:100%; }
+  .legend td{ padding:3px 6px; }
+  .legend td.g{ color:var(--gold); font-family:var(--font-data); width:34px; }
+
+  table.data{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.data th{ text-align:left; color:var(--gold); font-weight:600; padding:8px 8px; border-bottom:1px solid var(--line); font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; }
+  table.data td{ padding:8px 8px; border-bottom:1px solid rgba(255,255,255,0.06); font-family:var(--font-data); font-size:13px; }
+  table.data tr.current td{ background:rgba(201,164,99,0.10); }
+  .tag{ display:inline-block; padding:1px 7px; border-radius:20px; font-size:11px; font-family:var(--font-body); }
+  .tag.good{ background:rgba(127,168,118,0.18); color:var(--good); }
+  .tag.bad{ background:rgba(181,106,90,0.18); color:var(--bad); }
+  .tag.neutral{ background:rgba(179,170,208,0.16); color:var(--lavender); }
+  .tag.retro{ background:rgba(168,69,63,0.2); color:var(--sindoor); }
+
+  .prose{ font-size:14.5px; color:var(--parchment); }
+  .prose p{ margin:0 0 12px; }
+  .prose strong{ color:var(--gold-bright); }
+
+  .antardasha-list{ margin-top:14px; padding-left:0; list-style:none; font-size:13px; }
+  .antardasha-list li{ display:flex; justify-content:space-between; padding:6px 4px; border-bottom:1px dotted rgba(255,255,255,0.08); }
+  .antardasha-list li.current{ color:var(--gold-bright); font-weight:600; }
+
+  footer{ text-align:center; color:var(--lavender); font-size:12px; margin-top:30px; opacity:0.8; }
+  footer a{ color:var(--gold); }
+
+  @media (max-width:640px){
+    .grid2{ grid-template-columns:1fr; }
+    .summary-grid{ grid-template-columns:1fr 1fr; }
+    .rasi-chart{ width:100%; height:auto; aspect-ratio:1/1; }
+    .rasi-cell{ font-size:10px; }
+  }
+
+  .analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+  .mini-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:15px}
+  .mini-card h3{margin:0 0 9px;font-family:var(--font-display);font-size:16px;color:var(--gold-bright)}
+  .score{font-size:28px;font-weight:700;color:var(--gold-bright)}
+  .muted{color:var(--lavender);font-size:12px;line-height:1.55}
+  .pill{display:inline-block;border:1px solid rgba(201,164,99,.35);border-radius:999px;padding:3px 8px;margin:2px;font-size:11px}
+  .topic{margin:10px 0 0;padding:11px 12px;border-left:2px solid var(--gold);background:rgba(201,164,99,.055);border-radius:0 8px 8px 0}
+  @media(max-width:760px){.analysis-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="wheel"><div class="glyphs" id="zodiacWheel"></div></div>
+    <div class="eyebrow">Jyotisha · जन्म कुंडली</div>
+    <h1>Vedic <em>Birth Chart</em> &amp; Dasha Reader</h1>
+    <p class="sub">Enter a date, time and place of birth. The engine computes true sidereal planetary positions (Lahiri ayanamsa), the ascendant, nakshatra, Vimshottari dasha timeline and today's transits — from first-principles orbital mechanics, not a lookup table.</p>
+  </header>
+
+  <div class="card">
+    <h2>Birth details</h2>
+    <p class="hint">Time and place matter — they fix the Ascendant (Lagna) and houses. If exact birth time is unknown, positions of signs/planets will still be correct, but the Ascendant and house placements will not be reliable.</p>
+
+    <div class="grid2">
+      <div class="field">
+        <label for="fName">Name (optional)</label>
+        <input id="fName" type="text" placeholder="For your reference">
+      </div>
+      <div class="field">
+        <label for="fDate">Date of birth</label>
+        <input id="fDate" type="date">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label for="fTime">Time of birth</label>
+        <input id="fTime" type="time" step="60">
+      </div>
+      <div class="field city-results">
+        <label for="fCity">Place of birth</label>
+        <input id="fCity" type="text" placeholder="Start typing a city…" autocomplete="off">
+        <div class="city-dropdown" id="cityDropdown"></div>
+      </div>
+    </div>
+
+    <details class="advanced" id="advDetails">
+      <summary>Advanced — coordinates &amp; UTC offset (auto-filled from city, editable)</summary>
+      <div class="grid2">
+        <div class="field">
+          <label for="fLat">Latitude (° , north positive)</label>
+          <input id="fLat" type="number" step="0.0001" placeholder="e.g. 13.0827">
+        </div>
+        <div class="field">
+          <label for="fLon">Longitude (° , east positive)</label>
+          <input id="fLon" type="number" step="0.0001" placeholder="e.g. 80.2707">
+        </div>
+      </div>
+      <div class="field" style="max-width:220px;">
+        <label for="fTz">UTC offset at birth (hours)</label>
+        <input id="fTz" type="number" step="0.25" placeholder="e.g. 5.5">
+      </div>
+      <p class="hint" style="margin-bottom:0;">Standard-time offset for the selected city today. For places/dates with historical daylight-saving or a different zone in effect, adjust this manually.</p>
+    </details>
+
+    <button class="btn" id="btnCompute">Generate horoscope</button>
+    <p class="hint" id="engineStatus">High-precision Swiss Ephemeris is loading…</p>
+    <div class="error" id="formError"></div>
+  </div>
+
+  <div id="results">
+
+    <div class="card">
+      <h2>At a glance</h2>
+      <div class="summary-grid" id="summaryGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Birth chart — Rāśi Chakra</h2>
+      <p class="hint">South Indian style square chart. Sign positions are fixed; planets are placed by sidereal (Lahiri) longitude. <span style="color:var(--sindoor)">Asc</span> marks the ascendant sign.</p>
+      <div class="chart-wrap">
+        <div class="rasi-chart" id="rasiChart"></div>
+        <div class="legend">
+          <table id="legendTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Planetary positions</h2>
+      <p class="hint">Sidereal longitudes, Lahiri ayanamsa. House numbers use the whole-sign system from the ascendant.</p>
+      <div style="overflow-x:auto;">
+        <table class="data" id="planetTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Character notes</h2>
+      <div class="prose" id="predictionText"></div>
+    </div>
+
+    <div class="card">
+      <h2>Chart strength &amp; structure</h2>
+      <p class="hint">A rule-based Jyotisha analysis: dignity, house lords, graha dṛṣṭi, combustion, Navāṁśa and selected yogas. These are interpretive indicators, not guarantees.</p>
+      <div class="analysis-grid" id="structureGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Navāṁśa — D9</h2>
+      <p class="hint">Each planet's D9 sign is calculated from its sidereal longitude using the standard 9-part divisional mapping.</p>
+      <div style="overflow-x:auto;"><table class="data" id="d9Table"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>Graha dṛṣṭi — planetary aspects</h2>
+      <p class="hint">Classical whole-sign aspects are shown from the natal chart. Mars, Jupiter and Saturn receive their special aspects in addition to the 7th aspect.</p>
+      <div style="overflow-x:auto;"><table class="data" id="aspectTable"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>Life-area reading</h2>
+      <p class="hint">The engine combines relevant houses, their lords, planetary strength and the current Dasha rather than using a single sign-based paragraph.</p>
+      <div id="lifeReading"></div>
+    </div>
+
+    <div class="card">
+      <h2>Vimshottari Dasha</h2>
+      <p class="hint">120-year planetary period cycle, sequenced from the Moon's nakshatra at birth. Current period is highlighted.</p>
+      <div style="overflow-x:auto;">
+        <table class="data" id="dashaTable"></table>
+      </div>
+      <div id="antardashaBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>Transits today — Gochara</h2>
+      <p class="hint" id="transitAsOf"></p>
+      <div style="overflow-x:auto;">
+        <table class="data" id="transitTable"></table>
+      </div>
+      <div id="sadeSatiBox" class="prose" style="margin-top:12px;"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    Positions are computed with standard low-precision orbital-element formulas (accurate to roughly
+    1 arc-minute for most planets), Lahiri ayanamsa, and the mean lunar node for Rahu/Ketu. This is
+    good enough for correct sign, nakshatra and dasha determination in the great majority of cases,
+    but is not the arc-second precision of a full ephemeris (e.g. Swiss Ephemeris) — for a chart within
+    a minute or two of a sign/nakshatra boundary, or for major decisions, cross-check with a professional
+    astrologer or dedicated ephemeris software. This tool is for reflection and study, not a substitute
+    for your own judgment.
+  </footer>
+
+</div>
+
+<script type="module">
+  // High-precision Swiss Ephemeris WASM engine. The pinned build keeps the app reproducible.
+  import SwissEph from 'https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@v0.1.0/src/swisseph.js';
+  window.swissReady = (async () => {
+    const swe = new SwissEph();
+    await swe.initSwissEph();
+    // Lahiri / Chitrapaksha ayanamsa for Vedic sidereal calculations.
+    swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
+    window.swissEph = swe;
+    return swe;
+  })();
+  window.addEventListener('beforeunload', () => { try { window.swissEph?.close(); } catch(e) {} });
+</script>
+
+<script>
+/* ============================================================
+   ASTRONOMY ENGINE  (validated against known reference points:
+   Sun longitude vs Astronomical Almanac mean-longitude method;
+   Karka->Simha sankranti timing mid-Aug; ascendant formula
+   checked against first-principles equatorial rising-point cases)
+   ============================================================ */
+const DEG = Math.PI/180, RAD = 180/Math.PI;
+function sinD(x){return Math.sin(x*DEG);}
+function cosD(x){return Math.cos(x*DEG);}
+function tanD(x){return Math.tan(x*DEG);}
+function atan2d(y,x){return Math.atan2(y,x)*RAD;}
+function rev(x){return x-Math.floor(x/360)*360;}
+
+function julianDay(year,month,day,hourUT){
+  let Y=year, M=month;
+  if(M<=2){Y-=1;M+=12;}
+  const A=Math.floor(Y/100);
+  const B=2-A+Math.floor(A/4);
+  const JD0=Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+day+B-1524.5;
+  return JD0+hourUT/24;
+}
+function dFromJD(jd){ return jd-2451543.5; }
+
+function keplerE(M,e){
+  let E=M+e*RAD*sinD(M)*(1+e*cosD(M));
+  for(let i=0;i<8;i++){
+    const dM=M-(E-e*RAD*sinD(E));
+    const dE=dM/(1-e*cosD(E));
+    E+=dE;
+    if(Math.abs(dE)<1e-9)break;
+  }
+  return E;
+}
+function heliocentric(N,i,w,a,e,M){
+  const E=keplerE(M,e);
+  const xv=a*(cosD(E)-e);
+  const yv=a*Math.sqrt(1-e*e)*sinD(E);
+  const v=atan2d(yv,xv);
+  const r=Math.sqrt(xv*xv+yv*yv);
+  const vw=v+w;
+  const xh=r*(cosD(N)*cosD(vw)-sinD(N)*sinD(vw)*cosD(i));
+  const yh=r*(sinD(N)*cosD(vw)+cosD(N)*sinD(vw)*cosD(i));
+  const zh=r*(sinD(vw)*sinD(i));
+  return {xh,yh,zh,r};
+}
+function sunPos(d){
+  const w=rev(282.9404+4.70935e-5*d);
+  const e=0.016709-1.151e-9*d;
+  const M=rev(356.0470+0.9856002585*d);
+  const E=keplerE(M,e);
+  const xv=cosD(E)-e, yv=Math.sqrt(1-e*e)*sinD(E);
+  const v=atan2d(yv,xv);
+  const r=Math.sqrt(xv*xv+yv*yv);
+  return {lon:rev(v+w), r, M, w};
+}
+function moonPos(d,sun){
+  const N=rev(125.1228-0.0529538083*d);
+  const i=5.1454;
+  const w=rev(318.0634+0.1643573223*d);
+  const a=60.2666, e=0.054900;
+  const M=rev(115.3654+13.0649929509*d);
+  const h=heliocentric(N,i,w,a,e,M);
+  let lonecl=rev(atan2d(h.yh,h.xh));
+  const Ms=sun.M, Mm=M, Nm=N, wm=w;
+  const Ls=rev(Ms+sun.w);
+  const Lm=rev(Mm+wm+Nm);
+  const D=rev(Lm-Ls);
+  const F=rev(Lm-Nm);
+  let dLon=0;
+  dLon+=-1.274*sinD(Mm-2*D);
+  dLon+=0.658*sinD(2*D);
+  dLon+=-0.186*sinD(Ms);
+  dLon+=-0.059*sinD(2*Mm-2*D);
+  dLon+=-0.057*sinD(Mm-2*D+Ms);
+  dLon+=0.053*sinD(Mm+2*D);
+  dLon+=0.046*sinD(2*D-Ms);
+  dLon+=0.041*sinD(Mm-Ms);
+  dLon+=-0.035*sinD(D);
+  dLon+=-0.031*sinD(Mm+Ms);
+  dLon+=-0.015*sinD(2*F-2*D);
+  dLon+=0.011*sinD(Mm-4*D);
+  lonecl=rev(lonecl+dLon);
+  return {lon:lonecl};
+}
+function planetElements(name,d){
+  switch(name){
+    case 'mercury': return {N:rev(48.3313+3.24587e-5*d), i:7.0047+5.00e-8*d, w:rev(29.1241+1.01444e-5*d), a:0.387098, e:0.205635+5.59e-10*d, M:rev(168.6562+4.0923344368*d)};
+    case 'venus': return {N:rev(76.6799+2.46590e-5*d), i:3.3946+2.75e-8*d, w:rev(54.8910+1.38374e-5*d), a:0.723330, e:0.006773-1.302e-9*d, M:rev(48.0052+1.6021302244*d)};
+    case 'mars': return {N:rev(49.5574+2.11081e-5*d), i:1.8497-1.78e-8*d, w:rev(286.5016+2.92961e-5*d), a:1.523688, e:0.093405+2.516e-9*d, M:rev(18.6021+0.5240207766*d)};
+    case 'jupiter': return {N:rev(100.4542+2.76854e-5*d), i:1.3030-1.557e-7*d, w:rev(273.8777+1.64505e-5*d), a:5.20256, e:0.048498+4.469e-9*d, M:rev(19.8950+0.0830853001*d)};
+    case 'saturn': return {N:rev(113.6634+2.38980e-5*d), i:2.4886-1.081e-7*d, w:rev(339.3939+2.97661e-5*d), a:9.55475, e:0.055546-9.499e-9*d, M:rev(316.9670+0.0334442282*d)};
+  }
+}
+function planetPos(name,d,sun){
+  const el=planetElements(name,d);
+  const h=heliocentric(el.N,el.i,el.w,el.a,el.e,el.M);
+  const xs=sun.r*cosD(sun.lon), ys=sun.r*sinD(sun.lon);
+  const xg=h.xh+xs, yg=h.yh+ys;
+  let lon=rev(atan2d(yg,xg));
+  if(name==='jupiter'||name==='saturn'){
+    const Mj=rev(19.8950+0.0830853001*d), Ms=rev(316.9670+0.0334442282*d);
+    if(name==='jupiter'){
+      lon+=-0.332*sinD(2*Mj-5*Ms-67.6);
+      lon+=-0.056*sinD(2*Mj-2*Ms+21);
+      lon+=0.042*sinD(3*Mj-5*Ms+21);
+      lon+=-0.036*sinD(Mj-2*Ms);
+      lon+=0.022*cosD(Mj-Ms);
+      lon+=0.023*sinD(2*Mj-3*Ms+52);
+      lon+=-0.016*sinD(Mj-5*Ms-69);
+    } else {
+      lon+=0.812*sinD(2*Mj-5*Ms-67.6);
+      lon+=-0.229*cosD(2*Mj-4*Ms-2);
+      lon+=0.119*sinD(Mj-2*Ms-3);
+      lon+=0.046*sinD(2*Mj-6*Ms-69);
+      lon+=0.014*sinD(Mj-3*Ms+32);
+    }
+    lon=rev(lon);
+  }
+  return {lon};
+}
+function rahuPos(d){ return rev(125.1228-0.0529538083*d); }
+function lahiriAyanamsa(jd){
+  const T=(jd-2451545.0)/36525.0;
+  const years=T*100;
+  return 23.85333+years*(50.2388/3600);
+}
+function obliquity(jd){
+  const T=(jd-2451545.0)/36525.0;
+  return 23.439291-0.0130042*T;
+}
+function gmstDeg(jd){
+  const T=(jd-2451545.0)/36525.0;
+  const gmst=280.46061837+360.98564736629*(jd-2451545.0)+0.000387933*T*T-(T*T*T)/38710000;
+  return rev(gmst);
+}
+function ascendantTropical(jd,lonDeg,latDeg){
+  const gmst=gmstDeg(jd);
+  const ramc=rev(gmst+lonDeg);
+  const eps=obliquity(jd);
+  const y=cosD(ramc);
+  const x=-(sinD(ramc)*cosD(eps)+tanD(latDeg)*sinD(eps));
+  return rev(atan2d(y,x));
+}
+
+/* ============================================================
+   VEDIC DATA TABLES
+   ============================================================ */
+const SIGNS = [
+  {en:'Aries', sk:'Mesha', glyph:'♈'},{en:'Taurus', sk:'Vrishabha', glyph:'♉'},
+  {en:'Gemini', sk:'Mithuna', glyph:'♊'},{en:'Cancer', sk:'Karka', glyph:'♋'},
+  {en:'Leo', sk:'Simha', glyph:'♌'},{en:'Virgo', sk:'Kanya', glyph:'♍'},
+  {en:'Libra', sk:'Tula', glyph:'♎'},{en:'Scorpio', sk:'Vrishchika', glyph:'♏'},
+  {en:'Sagittarius', sk:'Dhanu', glyph:'♐'},{en:'Capricorn', sk:'Makara', glyph:'♑'},
+  {en:'Aquarius', sk:'Kumbha', glyph:'♒'},{en:'Pisces', sk:'Meena', glyph:'♓'}
+];
+const NAKSHATRAS = [
+  'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha',
+  'Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+  'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'
+];
+const NAK_THEME = [
+  'swift, pioneering healing energy','restraint that carries things to completion','a sharp, cutting will to purify',
+  'fertile, sensuous devotion to growth','searching curiosity, gentle pursuit','a storm that clears the air',
+  'renewal after hardship, the returner','nourishing and disciplined care','coiled intensity and instinct',
+  'ancestral authority, the seat of the mighty','early bonds, the smaller union','a lasting bond, the larger union',
+  'the skilled hand, quick and capable','brilliance, the maker of beautiful things','the spreader, independent and quick to move',
+  'forked determination, the achiever under pressure','devotion between friends, quiet success','the elder, seniority through victory',
+  'the root, endings that expose the essence','the early invincible one, unstoppable early strength',
+  'the later invincible one, quiet lasting victory','fame through listening and learning','the wealthiest, rhythm and drumbeat',
+  'the hundred healers, vast unstructured space','the former of the fortunate feet, hidden fire',
+  'the latter of the fortunate feet, steady support','the wealthy one, completion and transition'
+];
+const DASHA_ORDER = ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+const DASHA_YEARS = {Ketu:7,Venus:20,Sun:6,Moon:10,Mars:7,Rahu:18,Jupiter:16,Saturn:19,Mercury:17};
+const PLANET_GLYPH = {Sun:'☉',Moon:'☾',Mars:'♂',Mercury:'☿',Jupiter:'♃',Venus:'♀',Saturn:'♄',Rahu:'☊',Ketu:'☋'};
+const PLANET_ABBR = {Sun:'Su',Moon:'Mo',Mars:'Ma',Mercury:'Me',Jupiter:'Ju',Venus:'Ve',Saturn:'Sa',Rahu:'Ra',Ketu:'Ke'};
+
+const LAGNA_TEXT = [
+  "An Aries ascendant gives a direct, initiating temperament — quick to start, quick to decide, most comfortable leading from the front rather than waiting to be asked.",
+  "A Taurus ascendant gives a steady, sensory temperament — patient, resistant to being rushed, and oriented toward building things that last and feel secure.",
+  "A Gemini ascendant gives a curious, quick-adapting temperament — comfortable switching between people and topics, drawn to conversation and variety.",
+  "A Cancer ascendant gives a protective, feeling-led temperament — attentive to mood and belonging, with a strong instinct to care for whoever is close.",
+  "A Leo ascendant gives a warm, visible temperament — comfortable holding attention, generous when appreciated, and oriented around dignity and self-expression.",
+  "A Virgo ascendant gives a precise, service-oriented temperament — attentive to detail, self-critical, and happiest when improving something concrete.",
+  "A Libra ascendant gives a relational, balance-seeking temperament — attuned to fairness and aesthetics, and inclined to weigh both sides before acting.",
+  "A Scorpio ascendant gives an intense, private temperament — drawn beneath the surface of things, slow to trust, and formidable once committed.",
+  "A Sagittarius ascendant gives an expansive, restless temperament — drawn to meaning, travel and belief, and uncomfortable with small horizons.",
+  "A Capricorn ascendant gives a disciplined, patient temperament — comfortable with responsibility and long timelines, oriented toward earned standing.",
+  "An Aquarius ascendant gives a detached, principle-led temperament — comfortable outside the mainstream, drawn to groups, ideas and reform.",
+  "A Pisces ascendant gives a permeable, imaginative temperament — sensitive to unseen currents in a room, drawn to art, mysticism or quiet retreat."
+];
+const MOON_TEXT = [
+  "with the Moon in Aries, the emotional style is fast-igniting and quick to move on — feelings surface immediately and rarely linger as grudges.",
+  "with the Moon in Taurus, the emotional style seeks comfort and stability — steady moods, a love of the sensory and physical world, slow to be provoked.",
+  "with the Moon in Gemini, the emotional style processes feeling through talking and thinking — moods shift with new information or conversation.",
+  "with the Moon in Cancer, the emotional style is deeply tidal and memory-bound — strong attachment to home, family, and the emotional past.",
+  "with the Moon in Leo, the emotional style needs warmth and acknowledgment — feelings are worn openly and respond strongly to being seen.",
+  "with the Moon in Virgo, the emotional style manages feeling through order and usefulness — anxiety eases once there is something to fix.",
+  "with the Moon in Libra, the emotional style is tuned to other people's moods — discomfort with conflict, a strong pull toward harmony.",
+  "with the Moon in Scorpio, the emotional style runs deep and guarded — feelings are intense but rarely shown until trust is established.",
+  "with the Moon in Sagittarius, the emotional style needs freedom and perspective — moods lift quickly through humor, movement or new horizons.",
+  "with the Moon in Capricorn, the emotional style is controlled and self-reliant — feelings are managed privately, rarely displayed at work.",
+  "with the Moon in Aquarius, the emotional style is a little detached from itself — feelings are observed and rationalized more than immersed in.",
+  "with the Moon in Pisces, the emotional style dissolves boundaries — high empathy, vivid imagination, and susceptibility to others' moods."
+];
+const DASHA_TEXT = {
+  Sun:'a period of increased focus on authority, visibility, father-figures and one\'s own standing — good for stepping into responsibility.',
+  Moon:'a period governed by mood, home and the public — emotional life and domestic matters come to the foreground.',
+  Mars:'a period of raised energy, courage and friction — drive and initiative increase, along with impatience.',
+  Mercury:'a period favoring communication, study, trade and networks — the mind is active and opportunities travel through conversation.',
+  Jupiter:'a period of expansion, teaching and good faith — growth in knowledge, status or family, generally a supportive stretch.',
+  Venus:'a period oriented toward relationships, comfort, art and finances — attention turns to what is loved and enjoyed.',
+  Saturn:'a period of discipline, delay and consolidation — slower, heavier, but what is built here tends to last.',
+  Rahu:'a period of ambition, obsession and unconventional gains — intense forward drive toward something outside the ordinary script.',
+  Ketu:'a period of detachment, introspection and loose ends — worldly momentum eases and inward or spiritual concerns rise.'
+};
+const GOCHARA_GOOD_HOUSES = {
+  Sun:[3,6,10,11], Mercury:[3,6,10,11], Venus:[3,6,10,11],
+  Moon:[1,3,6,7,10,11],
+  Mars:[3,6,11], Saturn:[3,6,11], Rahu:[3,6,11], Ketu:[3,6,11],
+  Jupiter:[2,5,7,9,11]
+};
+
+/* ============================================================
+   CITY DATABASE  (name, country, lat, lon, standard UTC offset hrs)
+   ============================================================ */
+const CITIES = [
+["Chennai","India",13.0827,80.2707,5.5],["Mumbai","India",19.0760,72.8777,5.5],["Delhi","India",28.7041,77.1025,5.5],
+["Bengaluru","India",12.9716,77.5946,5.5],["Hyderabad","India",17.3850,78.4867,5.5],["Kolkata","India",22.5726,88.3639,5.5],
+["Pune","India",18.5204,73.8567,5.5],["Ahmedabad","India",23.0225,72.5714,5.5],["Jaipur","India",26.9124,75.7873,5.5],
+["Lucknow","India",26.8467,80.9462,5.5],["Kanpur","India",26.4499,80.3319,5.5],["Nagpur","India",21.1458,79.0882,5.5],
+["Indore","India",22.7196,75.8577,5.5],["Bhopal","India",23.2599,77.4126,5.5],["Patna","India",25.5941,85.1376,5.5],
+["Vadodara","India",22.3072,73.1812,5.5],["Coimbatore","India",11.0168,76.9558,5.5],["Madurai","India",9.9252,78.1198,5.5],
+["Nashik","India",19.9975,73.7898,5.5],["Visakhapatnam","India",17.6868,83.2185,5.5],["Vijayawada","India",16.5062,80.6480,5.5],
+["Thiruvananthapuram","India",8.5241,76.9366,5.5],["Kochi","India",9.9312,76.2673,5.5],["Kozhikode","India",11.2588,75.7804,5.5],
+["Surat","India",21.1702,72.8311,5.5],["Rajkot","India",22.3039,70.8022,5.5],["Amritsar","India",31.6340,74.8723,5.5],
+["Ludhiana","India",30.9010,75.8573,5.5],["Chandigarh","India",30.7333,76.7794,5.5],["Dehradun","India",30.3165,78.0322,5.5],
+["Guwahati","India",26.1445,91.7362,5.5],["Bhubaneswar","India",20.2961,85.8245,5.5],["Ranchi","India",23.3441,85.3096,5.5],
+["Raipur","India",21.2514,81.6296,5.5],["Varanasi","India",25.3176,82.9739,5.5],["Agra","India",27.1767,78.0081,5.5],
+["Mysuru","India",12.2958,76.6394,5.5],["Tiruchirappalli","India",10.7905,78.7047,5.5],["Salem","India",11.6643,78.1460,5.5],
+["Puducherry","India",11.9416,79.8083,5.5],["Jodhpur","India",26.2389,73.0243,5.5],["Udaipur","India",24.5854,73.7125,5.5],
+["Shimla","India",31.1048,77.1734,5.5],["Srinagar","India",34.0837,74.7973,5.5],["Jammu","India",32.7266,74.8570,5.5],
+["Guntur","India",16.3067,80.4365,5.5],["Warangal","India",17.9689,79.5941,5.5],["Mangaluru","India",12.9141,74.8560,5.5],
+["Thanjavur","India",10.7870,79.1378,5.5],["Vellore","India",12.9165,79.1325,5.5],["Kollam","India",8.8932,76.6141,5.5],
+["Thrissur","India",10.5276,76.2144,5.5],["Gwalior","India",26.2183,78.1828,5.5],["Faridabad","India",28.4089,77.3178,5.5],
+["Ghaziabad","India",28.6692,77.4538,5.5],["Noida","India",28.5355,77.3910,5.5],["Gurugram","India",28.4595,77.0266,5.5],
+["Colombo","Sri Lanka",6.9271,79.8612,5.5],["Kathmandu","Nepal",27.7172,85.3240,5.75],["Dhaka","Bangladesh",23.8103,90.4125,6.0],
+["Islamabad","Pakistan",33.6844,73.0479,5.0],["Karachi","Pakistan",24.8607,67.0011,5.0],["Lahore","Pakistan",31.5497,74.3436,5.0],
+["Thimphu","Bhutan",27.4712,89.6339,6.0],
+["New York","USA",40.7128,-74.0060,-5.0],["Los Angeles","USA",34.0522,-118.2437,-8.0],["Chicago","USA",41.8781,-87.6298,-6.0],
+["Houston","USA",29.7604,-95.3698,-6.0],["San Francisco","USA",37.7749,-122.4194,-8.0],["Seattle","USA",47.6062,-122.3321,-8.0],
+["Boston","USA",42.3601,-71.0589,-5.0],["Washington DC","USA",38.9072,-77.0369,-5.0],["Miami","USA",25.7617,-80.1918,-5.0],
+["Dallas","USA",32.7767,-96.7970,-6.0],["Atlanta","USA",33.7490,-84.3880,-5.0],["Toronto","Canada",43.6532,-79.3832,-5.0],
+["Vancouver","Canada",49.2827,-123.1207,-8.0],["Montreal","Canada",45.5019,-73.5674,-5.0],
+["London","UK",51.5074,-0.1278,0.0],["Manchester","UK",53.4808,-2.2426,0.0],["Birmingham","UK",52.4862,-1.8904,0.0],
+["Paris","France",48.8566,2.3522,1.0],["Berlin","Germany",52.5200,13.4050,1.0],["Frankfurt","Germany",50.1109,8.6821,1.0],
+["Madrid","Spain",40.4168,-3.7038,1.0],["Barcelona","Spain",41.3851,2.1734,1.0],["Rome","Italy",41.9028,12.4964,1.0],
+["Milan","Italy",45.4642,9.1900,1.0],["Amsterdam","Netherlands",52.3676,4.9041,1.0],["Zurich","Switzerland",47.3769,8.5417,1.0],
+["Vienna","Austria",48.2082,16.3738,1.0],["Stockholm","Sweden",59.3293,18.0686,1.0],["Oslo","Norway",59.9139,10.7522,1.0],
+["Copenhagen","Denmark",55.6761,12.5683,1.0],["Dublin","Ireland",53.3498,-6.2603,0.0],["Lisbon","Portugal",38.7223,-9.1393,0.0],
+["Moscow","Russia",55.7558,37.6173,3.0],["Athens","Greece",37.9838,23.7275,2.0],["Warsaw","Poland",52.2297,21.0122,1.0],
+["Dubai","UAE",25.2048,55.2708,4.0],["Abu Dhabi","UAE",24.4539,54.3773,4.0],["Doha","Qatar",25.2854,51.5310,3.0],
+["Riyadh","Saudi Arabia",24.7136,46.6753,3.0],["Jeddah","Saudi Arabia",21.4858,39.1925,3.0],["Muscat","Oman",23.5880,58.3829,4.0],
+["Kuwait City","Kuwait",29.3759,47.9774,3.0],["Manama","Bahrain",26.2285,50.5860,3.0],["Tehran","Iran",35.6892,51.3890,3.5],
+["Tel Aviv","Israel",32.0853,34.7818,2.0],["Istanbul","Turkey",41.0082,28.9784,3.0],["Cairo","Egypt",30.0444,31.2357,2.0],
+["Nairobi","Kenya",-1.2921,36.8219,3.0],["Lagos","Nigeria",6.5244,3.3792,1.0],["Johannesburg","South Africa",-26.2041,28.0473,2.0],
+["Cape Town","South Africa",-33.9249,18.4241,2.0],
+["Singapore","Singapore",1.3521,103.8198,8.0],["Kuala Lumpur","Malaysia",3.1390,101.6869,8.0],["Bangkok","Thailand",13.7563,100.5018,7.0],
+["Jakarta","Indonesia",-6.2088,106.8456,7.0],["Manila","Philippines",14.5995,120.9842,8.0],["Hanoi","Vietnam",21.0278,105.8342,7.0],
+["Ho Chi Minh City","Vietnam",10.8231,106.6297,7.0],["Hong Kong","China",22.3193,114.1694,8.0],["Shanghai","China",31.2304,121.4737,8.0],
+["Beijing","China",39.9042,116.4074,8.0],["Shenzhen","China",22.5431,114.0579,8.0],["Taipei","Taiwan",25.0330,121.5654,8.0],
+["Seoul","South Korea",37.5665,126.9780,9.0],["Tokyo","Japan",35.6762,139.6503,9.0],["Osaka","Japan",34.6937,135.5023,9.0],
+["Sydney","Australia",-33.8688,151.2093,10.0],["Melbourne","Australia",-37.8136,144.9631,10.0],["Perth","Australia",-31.9505,115.8605,8.0],
+["Brisbane","Australia",-27.4698,153.0251,10.0],["Auckland","New Zealand",-36.8485,174.7633,12.0],
+["Sao Paulo","Brazil",-23.5505,-46.6333,-3.0],["Rio de Janeiro","Brazil",-22.9068,-43.1729,-3.0],["Buenos Aires","Argentina",-34.6037,-58.3816,-3.0],
+["Mexico City","Mexico",19.4326,-99.1332,-6.0],["Bogota","Colombia",4.7110,-74.0721,-5.0],["Lima","Peru",-12.0464,-77.0428,-5.0],
+["Santiago","Chile",-33.4489,-70.6693,-4.0]
+];
+
+/* ============================================================
+   APP LOGIC
+   ============================================================ */
+window.swissReady.then(()=>{ const el=document.getElementById('engineStatus'); if(el) el.textContent='Calculation engine: Swiss Ephemeris · Lahiri sidereal · historical IANA timezone support'; const b=document.getElementById('btnCompute'); if(b) b.disabled=false; }).catch(e=>{ const el=document.getElementById('engineStatus'); if(el) el.textContent='Swiss Ephemeris could not load. Check your internet connection and reload.'; const b=document.getElementById('btnCompute'); if(b) b.disabled=true; });
+
+async function computeChart(y,mo,da,hh,mm,tz,lat,lon){
+  const swe = await window.swissReady;
+  // Convert the supplied local civil time to UTC using the historically correct
+  // offset selected by the UI (the city picker now resolves DST from IANA zones).
+  const asUTCms = Date.UTC(y,mo-1,da,hh,mm,0);
+  const trueUTCms = asUTCms - tz*3600*1000;
+  const u = new Date(trueUTCms);
+  const Y=u.getUTCFullYear(), M=u.getUTCMonth()+1, D=u.getUTCDate();
+  const hourUT = u.getUTCHours()+u.getUTCMinutes()/60+u.getUTCSeconds()/3600;
+  const jd = swe.swe_julday(Y,M,D,hourUT,swe.SE_GREG_CAL);
+
+  const ids = {Sun:swe.SE_SUN, Moon:swe.SE_MOON, Mercury:swe.SE_MERCURY, Venus:swe.SE_VENUS, Mars:swe.SE_MARS, Jupiter:swe.SE_JUPITER, Saturn:swe.SE_SATURN};
+  const tropical = {};
+  const speeds = {};
+  for(const [name,id] of Object.entries(ids)){
+    const r=swe.swe_calc_ut(jd,id,swe.SEFLG_SWIEPH|swe.SEFLG_SPEED);
+    tropical[name]=r[0]; speeds[name]=r[3];
+  }
+  const node=swe.swe_calc_ut(jd,swe.SE_MEAN_NODE,swe.SEFLG_SWIEPH|swe.SEFLG_SPEED);
+  tropical.Rahu=node[0]; tropical.Ketu=rev(node[0]+180); speeds.Rahu=node[3]; speeds.Ketu=-node[3];
+
+  const ayan=swe.swe_get_ayanamsa_ut(jd);
+  const sidereal={};
+  for(const [k,v] of Object.entries(tropical)) sidereal[k]=rev(v-ayan);
+
+  // Swiss Ephemeris computes the astronomical ascendant. We use whole-sign
+  // houses for Jyotisha, so the sidereal Lagna is enough to assign houses.
+  const houses=swe.swe_houses(jd,lat,lon,'W');
+  const ascTrop=houses.ascmc ? houses.ascmc[0] : houses.ascendant;
+  const ascSidereal=rev(ascTrop-ayan);
+  const retro={};
+  ['Mercury','Venus','Mars','Jupiter','Saturn'].forEach(p=>retro[p]=speeds[p]<0);
+
+  return {jd,sun:{lon:tropical.Sun},moon:{lon:tropical.Moon},ayan,tropical,sidereal,ascTrop,ascSidereal,retro,utcInstant:u,swiss:true};
+}
+
+function signIndex(lon){ return Math.floor(rev(lon)/30); }
+function degInSign(lon){ return rev(lon)%30; }
+function nakIndex(lon){ return Math.floor(rev(lon)/(360/27)); }
+function nakPada(lon){
+  const within = rev(lon) - nakIndex(lon)*(360/27);
+  return Math.floor(within/(360/27/4))+1;
+}
+function houseFromLagna(planetSignIdx, lagnaSignIdx){ return ((planetSignIdx-lagnaSignIdx+12)%12)+1; }
+function fmtDeg(x){
+  const dg = Math.floor(x);
+  const m = Math.floor((x-dg)*60);
+  return dg+"°"+String(m).padStart(2,'0')+"'";
+}
+function fmtDate(dt){
+  return dt.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+}
+function addYears(date,years){
+  const ms = date.getTime() + years*365.25*86400000;
+  return new Date(ms);
+}
+
+function buildDashaTimeline(moonSidereal, birthDate){
+  const nIdx = nakIndex(moonSidereal);
+  const lordIdx = nIdx % 9;
+  const lord = DASHA_ORDER[lordIdx];
+  const within = moonSidereal - nIdx*(360/27);
+  const fracElapsed = within/(360/27);
+  const balanceYears = (1-fracElapsed)*DASHA_YEARS[lord];
+
+  const periods = [];
+  let start = new Date(birthDate.getTime());
+  let end = addYears(start, balanceYears);
+  periods.push({lord, start, end, years:balanceYears});
+  let idx = lordIdx;
+  for(let k=0;k<8;k++){
+    idx = (idx+1)%9;
+    const L = DASHA_ORDER[idx];
+    const yrs = DASHA_YEARS[L];
+    const s = new Date(end.getTime());
+    const e = addYears(s,yrs);
+    periods.push({lord:L, start:s, end:e, years:yrs});
+    end = e;
+  }
+  return periods;
+}
+function buildAntardashas(mahaLord, mahaStart, mahaYears){
+  const startIdx = DASHA_ORDER.indexOf(mahaLord);
+  const subs = [];
+  let cursor = new Date(mahaStart.getTime());
+  for(let k=0;k<9;k++){
+    const idx = (startIdx+k)%9;
+    const L = DASHA_ORDER[idx];
+    const yrs = mahaYears * DASHA_YEARS[L]/120;
+    const s = new Date(cursor.getTime());
+    const e = addYears(s,yrs);
+    subs.push({lord:L,start:s,end:e});
+    cursor = e;
+  }
+  return subs;
+}
+
+/* ============================================================
+   DEEPER JYOTISHA ANALYSIS
+   ============================================================ */
+const PLANET_LORD = {Sun:5, Moon:3, Mars:null, Mercury:null, Jupiter:null, Venus:null, Saturn:null};
+const SIGN_LORD = [
+  'Mars','Venus','Mercury','Moon','Sun','Mercury','Venus','Mars','Jupiter','Saturn','Saturn','Jupiter'
+];
+const EXALT = {Sun:0,Moon:1,Mars:9,Mercury:5,Jupiter:3,Venus:11,Saturn:6};
+const DEBIL = {Sun:6,Moon:7,Mars:3,Mercury:11,Jupiter:9,Venus:5,Saturn:0};
+const OWN = {Sun:[4],Moon:[3],Mars:[0,7],Mercury:[2,5],Jupiter:[8,11],Venus:[1,6],Saturn:[9,10]};
+const MOOLATRIKONA = {Sun:[0,20],Moon:[3,4],Mars:[0,12],Mercury:[5,20],Jupiter:[8,10],Venus:[6,15],Saturn:[10,20]};
+const NATURAL_FRIENDS = {
+  Sun:['Moon','Mars','Jupiter'], Moon:['Sun','Mercury'], Mars:['Sun','Moon','Jupiter'],
+  Mercury:['Sun','Venus'], Jupiter:['Sun','Moon','Mars'], Venus:['Mercury','Saturn'], Saturn:['Mercury','Venus']
+};
+const NATURAL_ENEMIES = {
+  Sun:['Venus','Saturn'], Moon:[], Mars:['Mercury'], Mercury:['Moon'], Jupiter:['Mercury','Venus'], Venus:['Sun','Moon'], Saturn:['Sun','Moon','Mars']
+};
+
+function houseLord(house, lagnaSignIdx){ return SIGN_LORD[(lagnaSignIdx+house-1)%12]; }
+function navamsaSignIndex(lon){
+  const s=signIndex(lon), n=Math.floor(degInSign(lon)/(30/9));
+  const movable=[0,3,6,9], fixed=[1,4,7,10];
+  const start=movable.includes(s)?s:(fixed.includes(s)?rev(s+8):rev(s+4));
+  return (start+n)%12;
+}
+function dignityOf(p, sIdx, deg){
+  if(p==='Rahu'||p==='Ketu') return 'Node';
+  if(EXALT[p]===sIdx) return 'Exalted';
+  if(DEBIL[p]===sIdx) return 'Debilitated';
+  if(OWN[p]?.includes(sIdx)){
+    const mt=MOOLATRIKONA[p];
+    if(mt && sIdx===mt[0] && deg<=mt[1]) return 'Moolatrikona';
+    return 'Own sign';
+  }
+  const lord=SIGN_LORD[sIdx];
+  if(NATURAL_FRIENDS[p]?.includes(lord)) return 'Friendly sign';
+  if(NATURAL_ENEMIES[p]?.includes(lord)) return 'Enemy sign';
+  return 'Neutral sign';
+}
+function combustionThreshold(p){ return {Sun:0,Moon:0,Mars:17,Mercury:14,Jupiter:11,Venus:10,Saturn:15}[p]||0; }
+function angularDistance(a,b){ let d=Math.abs(rev(a-b)); return d>180?360-d:d; }
+function isCombust(p, sid, sunSid){ return !['Sun','Moon','Rahu','Ketu'].includes(p) && angularDistance(sid,sunSid)<=combustionThreshold(p); }
+function aspectOffsets(p){ return p==='Mars'?[4,7,8]:p==='Jupiter'?[5,7,9]:p==='Saturn'?[3,7,10]:[7]; }
+function aspectTargets(p, signIdx){ return aspectOffsets(p).map(n=>({house:n,target:(signIdx+n-1)%12})); }
+function dashaActivationScore(p, pd, lagnaSignIdx){
+  if(!pd) return 0;
+  let score=0;
+  if([1,5,9,10,11].includes(pd.house)) score+=2;
+  if(['Exalted','Moolatrikona','Own sign'].includes(pd.dignity)) score+=2;
+  if(pd.dignity==='Debilitated') score-=2;
+  if(pd.combust) score-=1;
+  const lordHouses=[];
+  for(let h=1;h<=12;h++) if(houseLord(h,lagnaSignIdx)===p) lordHouses.push(h);
+  if(lordHouses.some(h=>[1,5,9,10,11].includes(h))) score+=2;
+  return score;
+}
+function detectYogas(pd, lagnaSignIdx){
+  const by={}; pd.forEach(x=>by[x.name]=x);
+  const out=[];
+  const benefic=['Jupiter','Venus','Mercury','Moon'];
+  if(by.Sun && by.Mercury && by.Sun.signIdx===by.Mercury.signIdx) out.push({name:'Budha-Aditya Yoga',why:'Sun and Mercury occupy the same sign; traditionally associated with intellect, communication and analytical expression.'});
+  if(by.Jupiter && by.Moon){
+    const rel=(by.Jupiter.signIdx-by.Moon.signIdx+12)%12+1;
+    if([5,7,9].includes(rel)) out.push({name:'Gaja-Kesari Yoga',why:'Jupiter is in a kendra from the natal Moon; traditionally read as a supportive combination for judgment, learning and standing.'});
+  }
+  for(const [p,signs] of Object.entries({Mars:[0,3,6,9],Mercury:[0,3,6,9],Jupiter:[0,3,6,9],Venus:[0,3,6,9],Saturn:[0,3,6,9]})){
+    if(by[p] && signs.includes(by[p].signIdx) && ['Exalted','Own sign','Moolatrikona'].includes(by[p].dignity)) out.push({name:`Pancha Mahapurusha — ${p}`,why:`${p} is in a kendra (1/4/7/10) in a strong dignity; traditionally this can amplify the planet's themes.`});
+  }
+  const lords={}; for(let h=1;h<=12;h++) lords[h]=houseLord(h,lagnaSignIdx);
+  if(lords[9]===by[10]?.name && lords[10]===by[9]?.name) out.push({name:'Dharma-Karmadhipati connection',why:'The 9th and 10th house lords exchange ownership roles; traditionally this links fortune/dharma with career/action.'});
+  return out;
+}
+function topicReading(topic, houses, pd, lagnaSignIdx, currentLord){
+  const relevant=pd.filter(x=>houses.includes(x.house));
+  const lordNames=houses.map(h=>houseLord(h,lagnaSignIdx));
+  const lordPlanets=pd.filter(x=>lordNames.includes(x.name));
+  const all=[...relevant,...lordPlanets];
+  let score=0;
+  all.forEach(x=>{score += x.dignity==='Exalted'||x.dignity==='Moolatrikona'||x.dignity==='Own sign'?2:x.dignity==='Debilitated'?-2:0; if([1,5,9,10,11].includes(x.house))score++; if(x.combust)score--; if(x.retro)score+=0;});
+  if(currentLord && all.some(x=>x.name===currentLord)) score+=2;
+  const level=score>=5?'strongly supported':score>=2?'supported':score<=-3?'under pressure':'mixed';
+  const factors=all.slice(0,6).map(x=>`${x.name} in ${SIGNS[x.signIdx].sk} (H${x.house}, ${x.dignity}${x.combust?' · combust':''})`);
+  return `<div class="topic"><strong>${topic}: ${level}</strong><div class="muted">Key factors: ${factors.length?factors.join(' · '):'no major natal planet directly occupies these houses'}${currentLord?' · Current Mahadasha: '+currentLord:''}.</div></div>`;
+}
+function renderDeepAnalysis(chart, planetData, lagnaSignIdx, currentLord){
+  const by={}; planetData.forEach(x=>by[x.name]=x);
+  const structure=document.getElementById('structureGrid');
+  const strong=planetData.filter(x=>['Exalted','Moolatrikona','Own sign'].includes(x.dignity)).length;
+  const weak=planetData.filter(x=>x.dignity==='Debilitated').length;
+  const combust=planetData.filter(x=>x.combust).length;
+  const yogas=detectYogas(planetData,lagnaSignIdx);
+  structure.innerHTML=`
+    <div class="mini-card"><h3>Planetary strength</h3><div class="score">${strong}/${planetData.length}</div><div class="muted">Planets in exaltation, moolatrikona or own sign. ${weak} debilitated, ${combust} combust.</div></div>
+    <div class="mini-card"><h3>Ascendant framework</h3><div class="pill">Lagna lord: ${houseLord(1,lagnaSignIdx)}</div><div class="pill">10th lord: ${houseLord(10,lagnaSignIdx)}</div><div class="pill">7th lord: ${houseLord(7,lagnaSignIdx)}</div><div class="pill">9th lord: ${houseLord(9,lagnaSignIdx)}</div><div class="muted" style="margin-top:8px">Interpretation uses house ownership as well as planet placement.</div></div>
+    <div class="mini-card"><h3>Yogas detected</h3>${yogas.length?yogas.map(y=>`<div class="topic"><strong>${y.name}</strong><div class="muted">${y.why}</div></div>`).join(''):'<div class="muted">No selected yoga rules triggered strongly enough to display.</div>'}</div>
+    <div class="mini-card"><h3>Current Dasha activation</h3><div class="score">${currentLord||'—'}</div><div class="muted">${currentLord&&by[currentLord]?`The current Mahadasha lord is in house ${by[currentLord].house}, ${by[currentLord].dignity.toLowerCase()} and ${by[currentLord].retro?'retrograde':'direct'}.`:'Current period is outside the modeled span.'}</div></div>`;
+
+  document.getElementById('d9Table').innerHTML='<tr><th>Graha</th><th>D1 sign</th><th>D1 house</th><th>D9 sign</th><th>Dignity</th></tr>'+planetData.map(p=>`<tr><td>${PLANET_GLYPH[p.name]} ${p.name}</td><td>${SIGNS[p.signIdx].sk}</td><td>${p.house}</td><td>${SIGNS[p.d9SignIdx].sk}</td><td>${p.dignity}${p.combust?' · combust':''}</td></tr>`).join('');
+  const aspectRows=[];
+  planetData.filter(p=>!['Rahu','Ketu'].includes(p.name)).forEach(p=>aspectTargets(p.name,p.signIdx).forEach(a=>aspectRows.push(`<tr><td>${PLANET_GLYPH[p.name]} ${p.name}</td><td>${a.house}</td><td>${SIGNS[a.target].sk}</td><td>${a.house===7?'7th aspect':'special '+a.house+'th aspect'}</td></tr>`)));
+  document.getElementById('aspectTable').innerHTML='<tr><th>Graha</th><th>Aspect</th><th>Target sign</th><th>Type</th></tr>'+aspectRows.join('');
+  document.getElementById('lifeReading').innerHTML=[
+    topicReading('Career',[2,6,10,11],planetData,lagnaSignIdx,currentLord),
+    topicReading('Relationships',[2,7,8],planetData,lagnaSignIdx,currentLord),
+    topicReading('Education & learning',[4,5,9],planetData,lagnaSignIdx,currentLord),
+    topicReading('Wealth',[2,5,9,11],planetData,lagnaSignIdx,currentLord)
+  ].join('');
+}
+
+/* ---------- Historical IANA timezone handling ---------- */
+const CITY_TZ = {
+  India:'Asia/Kolkata', 'Sri Lanka':'Asia/Colombo', Nepal:'Asia/Kathmandu', Bangladesh:'Asia/Dhaka', Pakistan:'Asia/Karachi', Bhutan:'Asia/Thimphu',
+  USA:{'New York':'America/New_York','Los Angeles':'America/Los_Angeles','Chicago':'America/Chicago','Houston':'America/Chicago','San Francisco':'America/Los_Angeles','Seattle':'America/Los_Angeles','Boston':'America/New_York','Washington DC':'America/New_York','Miami':'America/New_York','Dallas':'America/Chicago','Atlanta':'America/New_York'},
+  Canada:{Toronto:'America/Toronto',Vancouver:'America/Vancouver',Montreal:'America/Toronto'},
+  UK:'Europe/London', France:'Europe/Paris', Germany:'Europe/Berlin', Spain:'Europe/Madrid', Italy:'Europe/Rome', Netherlands:'Europe/Amsterdam', Switzerland:'Europe/Zurich', Austria:'Europe/Vienna', Sweden:'Europe/Stockholm', Norway:'Europe/Oslo', Denmark:'Europe/Copenhagen', Ireland:'Europe/Dublin', Portugal:'Europe/Lisbon', Russia:'Europe/Moscow', Greece:'Europe/Athens', Poland:'Europe/Warsaw',
+  UAE:'Asia/Dubai', Qatar:'Asia/Qatar', 'Saudi Arabia':'Asia/Riyadh', Oman:'Asia/Muscat', Kuwait:'Asia/Kuwait', Bahrain:'Asia/Bahrain', Iran:'Asia/Tehran', Israel:'Asia/Jerusalem', Turkey:'Europe/Istanbul', Egypt:'Africa/Cairo', Kenya:'Africa/Nairobi', Nigeria:'Africa/Lagos', 'South Africa':'Africa/Johannesburg',
+  Singapore:'Asia/Singapore', Malaysia:'Asia/Kuala_Lumpur', Thailand:'Asia/Bangkok', Indonesia:'Asia/Jakarta', Philippines:'Asia/Manila', Vietnam:'Asia/Ho_Chi_Minh', China:'Asia/Shanghai', Taiwan:'Asia/Taipei', 'South Korea':'Asia/Seoul', Japan:'Asia/Tokyo',
+  Australia:{Sydney:'Australia/Sydney',Melbourne:'Australia/Melbourne',Perth:'Australia/Perth',Brisbane:'Australia/Brisbane'}, 'New Zealand':'Pacific/Auckland',
+  Brazil:'America/Sao_Paulo', Argentina:'America/Argentina/Buenos_Aires', Mexico:'America/Mexico_City', Colombia:'America/Bogota', Peru:'America/Lima', Chile:'America/Santiago'
+};
+function getCityTimezone(city,country){ const v=CITY_TZ[country]; return typeof v==='string'?v:(v&&v[city])||null; }
+function offsetForTimeZone(dateParts,timeZone){
+  if(!timeZone) return null;
+  const guess=Date.UTC(dateParts[0],dateParts[1]-1,dateParts[2],dateParts[3],dateParts[4],0);
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess));
+  const get=k=>Number(parts.find(x=>x.type===k)?.value||0);
+  const local=Date.UTC(get('year'),get('month')-1,get('day'),get('hour'),get('minute'),get('second'));
+  return (local-guess)/3600000;
+}
+function refreshSelectedCityOffset(){
+  if(!selectedCity) return;
+  const dv=document.getElementById('fDate').value, tv=document.getElementById('fTime').value;
+  if(!dv||!tv) return;
+  const [y,m,d]=dv.split('-').map(Number),[hh,mm]=tv.split(':').map(Number);
+  const zone=getCityTimezone(selectedCity[0],selectedCity[1]);
+  const off=offsetForTimeZone([y,m,d,hh,mm],zone);
+  if(off!==null) document.getElementById('fTz').value=off;
+}
+document.getElementById('fDate').addEventListener('change',refreshSelectedCityOffset);
+document.getElementById('fTime').addEventListener('change',refreshSelectedCityOffset);
+
+/* ---------- City autocomplete ---------- */
+const cityInput = document.getElementById('fCity');
+const cityDropdown = document.getElementById('cityDropdown');
+let selectedCity = null;
+cityInput.addEventListener('input', ()=>{
+  const q = cityInput.value.trim().toLowerCase();
+  selectedCity = null;
+  if(q.length<2){ cityDropdown.classList.remove('open'); return; }
+  const matches = CITIES.filter(c=>c[0].toLowerCase().startsWith(q) || c[0].toLowerCase().includes(q)).slice(0,8);
+  cityDropdown.innerHTML='';
+  if(matches.length===0){ cityDropdown.classList.remove('open'); return; }
+  matches.forEach(c=>{
+    const row = document.createElement('div');
+    row.textContent = c[0]+", "+c[1];
+    row.addEventListener('click', ()=>{
+      cityInput.value = c[0]+", "+c[1];
+      document.getElementById('fLat').value = c[2];
+      document.getElementById('fLon').value = c[3];
+      selectedCity = c;
+      const zone=getCityTimezone(c[0],c[1]);
+      const dv=document.getElementById('fDate').value, tv=document.getElementById('fTime').value;
+      if(zone && dv && tv){ const [y,m,d]=dv.split('-').map(Number),[hh,mm]=tv.split(':').map(Number); const off=offsetForTimeZone([y,m,d,hh,mm],zone); document.getElementById('fTz').value=off; } else { document.getElementById('fTz').value=c[4]; }
+      cityDropdown.classList.remove('open');
+    });
+    cityDropdown.appendChild(row);
+  });
+  cityDropdown.classList.add('open');
+});
+document.addEventListener('click',(e)=>{
+  if(!e.target.closest('.city-results')) cityDropdown.classList.remove('open');
+});
+
+/* ---------- Zodiac wheel decoration ---------- */
+(function(){
+  const wheel = document.getElementById('zodiacWheel');
+  const R = 195;
+  SIGNS.forEach((s,i)=>{
+    const angle = (i/12)*360-90;
+    const x = R*Math.cos(angle*Math.PI/180);
+    const y = R*Math.sin(angle*Math.PI/180);
+    const el = document.createElement('span');
+    el.textContent = s.glyph;
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    wheel.appendChild(el);
+  });
+})();
+
+/* ---------- Main compute & render ---------- */
+document.getElementById('btnCompute').addEventListener('click', async ()=>{
+  const err = document.getElementById('formError');
+  err.style.display='none';
+  const dateVal = document.getElementById('fDate').value;
+  const timeVal = document.getElementById('fTime').value;
+  const lat = parseFloat(document.getElementById('fLat').value);
+  const lon = parseFloat(document.getElementById('fLon').value);
+  const tz = parseFloat(document.getElementById('fTz').value);
+
+  if(!dateVal || !timeVal || isNaN(lat) || isNaN(lon) || isNaN(tz)){
+    err.textContent = 'Please fill in date, time, and place (or manual coordinates + UTC offset).';
+    err.style.display='block';
+    return;
+  }
+  const [y,mo,da] = dateVal.split('-').map(Number);
+  const [hh,mm] = timeVal.split(':').map(Number);
+
+  if(y<1850||y>2150){
+    err.textContent = 'Please use a birth year between 1850 and 2150 for reliable accuracy.';
+    err.style.display='block';
+    return;
+  }
+
+  const btn=document.getElementById('btnCompute');
+  const oldText=btn.textContent;
+  btn.disabled=true; btn.textContent='Calculating with Swiss Ephemeris…';
+  try {
+    const chart = await computeChart(y,mo,da,hh,mm,tz,lat,lon);
+    render(chart);
+  } catch(e) {
+    err.textContent='Swiss Ephemeris calculation failed: '+(e?.message||e);
+    err.style.display='block';
+    btn.disabled=false; btn.textContent=oldText;
+    return;
+  }
+  btn.disabled=false; btn.textContent=oldText;
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+});
+
+function render(chart){
+  const lagnaSignIdx = signIndex(chart.ascSidereal);
+  const moonSignIdx = signIndex(chart.sidereal.Moon);
+  const moonNakIdx = nakIndex(chart.sidereal.Moon);
+  const moonPada = nakPada(chart.sidereal.Moon);
+
+  const planetOrder = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+  const planetData = planetOrder.map(p=>{
+    const lon = chart.sidereal[p];
+    const sIdx = signIndex(lon);
+    return {
+      name:p, lon, signIdx:sIdx, deg:degInSign(lon),
+      nakIdx:nakIndex(lon), pada:nakPada(lon),
+      house: houseFromLagna(sIdx, lagnaSignIdx),
+      retro: chart.retro[p]||false,
+      dignity: dignityOf(p,sIdx,degInSign(lon)),
+      combust: isCombust(p,lon,chart.sidereal.Sun),
+      d9SignIdx: navamsaSignIndex(lon)
+    };
+  });
+
+  // ---- Summary ----
+  const summary = document.getElementById('summaryGrid');
+  summary.innerHTML = `
+    <div class="summary-item"><div class="k">Ascendant · Lagna</div><div class="v">${SIGNS[lagnaSignIdx].sk} <span style="color:var(--lavender);font-size:13px;">(${SIGNS[lagnaSignIdx].en})</span></div><div class="v2">${fmtDeg(degInSign(chart.ascSidereal))}</div></div>
+    <div class="summary-item"><div class="k">Moon sign · Rāśi</div><div class="v">${SIGNS[moonSignIdx].sk} <span style="color:var(--lavender);font-size:13px;">(${SIGNS[moonSignIdx].en})</span></div><div class="v2">${fmtDeg(degInSign(chart.sidereal.Moon))}</div></div>
+    <div class="summary-item"><div class="k">Nakshatra</div><div class="v">${NAKSHATRAS[moonNakIdx]}</div><div class="v2">Pada ${moonPada}</div></div>
+  `;
+  const tithiDiff = rev(chart.tropical.Moon-chart.tropical.Sun);
+  const tithiNum = Math.floor(tithiDiff/12)+1;
+  const paksha = tithiNum<=15?'Shukla':'Krishna';
+  const TITHI_NAMES=['Pratipada','Dwitiya','Tritiya','Chaturthi','Panchami','Shashthi','Saptami','Ashtami','Navami','Dashami','Ekadashi','Dwadashi','Trayodashi','Chaturdashi','Purnima'];
+  const tithiDisplay = tithiNum<=15 ? TITHI_NAMES[tithiNum-1] : (tithiNum===30?'Amavasya':TITHI_NAMES[tithiNum-16]);
+
+  summary.innerHTML += `
+    <div class="summary-item"><div class="k">Tithi at birth</div><div class="v">${tithiDisplay}</div><div class="v2">${paksha} Paksha</div></div>
+  `;
+
+  // ---- Rasi chart ----
+  const POS = {0:[0,1],1:[0,2],2:[0,3],3:[1,3],4:[2,3],5:[3,3],6:[3,2],7:[3,1],8:[3,0],9:[2,0],10:[1,0],11:[0,0]};
+  const chartEl = document.getElementById('rasiChart');
+  chartEl.innerHTML='';
+  const cellPlanets = {};
+  planetData.forEach(p=>{
+    cellPlanets[p.signIdx] = cellPlanets[p.signIdx]||[];
+    cellPlanets[p.signIdx].push(PLANET_ABBR[p.name]+(p.retro?'(R)':''));
+  });
+  for(let i=0;i<12;i++){
+    const [r,c] = POS[i];
+    const cell = document.createElement('div');
+    cell.className='rasi-cell'+(i===lagnaSignIdx?' asc':'');
+    cell.style.gridRow = (r+1);
+    cell.style.gridColumn = (c+1);
+    cell.innerHTML = `<div class="sign">${SIGNS[i].glyph} ${SIGNS[i].sk}</div><div class="planets">${(cellPlanets[i]||[]).join(' ')}</div>` + (i===lagnaSignIdx?'<div class="asc-tag">ASC</div>':'');
+    chartEl.appendChild(cell);
+  }
+  const center = document.createElement('div');
+  center.className='rasi-center';
+  center.innerHTML = `<div class="om">ॐ</div><div class="cap">Rāśi Chakra<br>South Indian style</div>`;
+  chartEl.appendChild(center);
+
+  const legendTable = document.getElementById('legendTable');
+  legendTable.innerHTML = planetData.map(p=>`<tr><td class="g">${PLANET_GLYPH[p.name]}</td><td>${p.name}${p.retro?' <span class="tag retro">R</span>':''} — ${SIGNS[p.signIdx].sk}, house ${p.house}</td></tr>`).join('');
+
+  // ---- Planet table ----
+  const pt = document.getElementById('planetTable');
+  pt.innerHTML = `<tr><th>Graha</th><th>Sign</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Dignity</th><th>Condition</th></tr>` +
+    planetData.map(p=>`<tr>
+      <td>${PLANET_GLYPH[p.name]} ${p.name}</td>
+      <td>${SIGNS[p.signIdx].sk}</td>
+      <td>${fmtDeg(p.deg)}</td>
+      <td>${NAKSHATRAS[p.nakIdx]}</td>
+      <td>${p.pada}</td>
+      <td>${p.house}</td>
+      <td>${p.dignity}</td>
+      <td>${p.combust?'<span class="tag retro">Combust</span> ':''}${p.retro?'<span class="tag retro">Retrograde</span>':'<span class="tag neutral">Direct</span>'}</td>
+    </tr>`).join('');
+
+  // ---- Prediction text ----
+  document.getElementById('predictionText').innerHTML = `
+    <p><strong>Lagna — ${SIGNS[lagnaSignIdx].sk}:</strong> ${LAGNA_TEXT[lagnaSignIdx]}</p>
+    <p><strong>Moon — ${SIGNS[moonSignIdx].sk}:</strong> The mind runs ${MOON_TEXT[moonSignIdx]}</p>
+    <p><strong>Birth nakshatra — ${NAKSHATRAS[moonNakIdx]}:</strong> carries a theme of ${NAK_THEME[moonNakIdx]}.</p>
+  `;
+
+  // ---- Dasha ----
+  const birthMs = chart.utcInstant.getTime();
+  const birthDate = new Date(birthMs);
+  const periods = buildDashaTimeline(chart.sidereal.Moon, birthDate);
+  const now = new Date();
+  let currentPeriod = periods.find(p=>now>=p.start && now<p.end);
+  renderDeepAnalysis(chart, planetData, lagnaSignIdx, currentPeriod ? currentPeriod.lord : null);
+  const dashaTable = document.getElementById('dashaTable');
+  dashaTable.innerHTML = `<tr><th>Mahadasha</th><th>Start</th><th>End</th><th>Duration</th></tr>` +
+    periods.map(p=>`<tr class="${p===currentPeriod?'current':''}"><td>${PLANET_GLYPH[p.lord]} ${p.lord}${p===currentPeriod?' <span class="tag good">current</span>':''}</td><td>${fmtDate(p.start)}</td><td>${fmtDate(p.end)}</td><td>${p.years.toFixed(2)} yrs</td></tr>`).join('');
+
+  const antBox = document.getElementById('antardashaBox');
+  if(currentPeriod){
+    const subs = buildAntardashas(currentPeriod.lord, currentPeriod.start, currentPeriod.years);
+    const currentSub = subs.find(s=>now>=s.start && now<s.end);
+    antBox.innerHTML = `<h3 style="font-family:var(--font-display);font-size:15px;color:var(--gold-bright);margin:16px 0 4px;">Antardasha within ${currentPeriod.lord} Mahadasha</h3>
+      <ul class="antardasha-list">${subs.map(s=>`<li class="${s===currentSub?'current':''}">${s.lord} — ${fmtDate(s.start)} to ${fmtDate(s.end)}${s===currentSub?' (current)':''}</li>`).join('')}</ul>
+      <p class="hint" style="margin-top:8px;">${DASHA_TEXT[currentPeriod.lord]}</p>`;
+  } else {
+    antBox.innerHTML = `<p class="hint">Current date falls outside the modelled Vimshottari span for this chart.</p>`;
+  }
+
+  // ---- Transits (Swiss Ephemeris) ----
+  const swe = window.swissEph;
+  const transitNow = new Date();
+  const nowJD = swe.swe_julday(transitNow.getUTCFullYear(),transitNow.getUTCMonth()+1,transitNow.getUTCDate(),transitNow.getUTCHours()+transitNow.getUTCMinutes()/60+transitNow.getUTCSeconds()/3600,swe.SE_GREG_CAL);
+  const nowAyan = swe.swe_get_ayanamsa_ut(nowJD);
+  const transitIds = {Sun:swe.SE_SUN, Moon:swe.SE_MOON, Mercury:swe.SE_MERCURY, Venus:swe.SE_VENUS, Mars:swe.SE_MARS, Jupiter:swe.SE_JUPITER, Saturn:swe.SE_SATURN};
+  const nowTropical={};
+  for(const [name,id] of Object.entries(transitIds)) nowTropical[name]=swe.swe_calc_ut(nowJD,id,swe.SEFLG_SWIEPH|swe.SEFLG_SPEED)[0];
+  const nowNode=swe.swe_calc_ut(nowJD,swe.SE_MEAN_NODE,swe.SEFLG_SWIEPH|swe.SEFLG_SPEED)[0];
+  nowTropical.Rahu=nowNode; nowTropical.Ketu=rev(nowNode+180);
+  document.getElementById('transitAsOf').textContent = `As of ${transitNow.toLocaleString()} (Swiss Ephemeris; houses shown from natal Moon sign / Chandra Rāśi).`;
+
+  const transitTable = document.getElementById('transitTable');
+  const rows = planetOrder.map(p=>{
+    const sid = rev(nowTropical[p]-nowAyan);
+    const sIdx = signIndex(sid);
+    const houseFromMoon = houseFromLagna(sIdx, moonSignIdx);
+    const good = GOCHARA_GOOD_HOUSES[p]||[];
+    let verdict = good.includes(houseFromMoon) ? '<span class="tag good">favorable</span>' : '<span class="tag neutral">neutral / mixed</span>';
+    return `<tr><td>${PLANET_GLYPH[p]} ${p}</td><td>${SIGNS[sIdx].sk}</td><td>${fmtDeg(degInSign(sid))}</td><td>${houseFromMoon}</td><td>${verdict}</td></tr>`;
+  }).join('');
+  transitTable.innerHTML = `<tr><th>Graha</th><th>Transit sign</th><th>Degree</th><th>House from Moon</th><th>Reading</th></tr>` + rows;
+
+  // Sade Sati
+  const saturnSid = rev(nowTropical.Saturn-nowAyan);
+  const saturnSignIdx = signIndex(saturnSid);
+  const rel = (saturnSignIdx-moonSignIdx+12)%12;
+  const sadeSatiBox = document.getElementById('sadeSatiBox');
+  if(rel===11){ sadeSatiBox.innerHTML = `<p><strong>Sade Sati — rising phase.</strong> Saturn is transiting the 12th sign from your natal Moon, the opening phase of Sade Sati: a good time to simplify commitments and let go of what no longer fits.</p>`; }
+  else if(rel===0){ sadeSatiBox.innerHTML = `<p><strong>Sade Sati — peak phase.</strong> Saturn is transiting your natal Moon sign directly, the central and usually heaviest phase: steady discipline and realistic expectations serve better than resistance.</p>`; }
+  else if(rel===1){ sadeSatiBox.innerHTML = `<p><strong>Sade Sati — closing phase.</strong> Saturn is transiting the 2nd sign from your natal Moon, the final phase: consolidation of the lessons of the previous seven-odd years, particularly around finances and family.</p>`; }
+  else { sadeSatiBox.innerHTML = `<p style="color:var(--lavender);">Saturn is not currently in a Sade Sati position relative to your natal Moon.</p>`; }
+}
+</script>
+</body>
+</html>
